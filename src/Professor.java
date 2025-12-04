@@ -1,15 +1,11 @@
-package src;
-
 public class Professor {
 
     private int id, numero;
     private String nome, email, rua, bairro, cidade, estado_civil;
     private String estado;
+    private String senha;
     private double salario;
 
-    /**
-     * Construtor para INSERÇÃO (CREATE), onde o ID ainda não existe.
-     */
     public Professor(
         String nome,
         String rua,
@@ -32,9 +28,6 @@ public class Professor {
         this.numero = numero;
     }
 
-    /**
-     * Construtor para LEITURA (READ) ou ATUALIZAÇÃO (UPDATE), onde o ID já é conhecido.
-     */
     public Professor(
         int id,
         String nome,
@@ -59,7 +52,6 @@ public class Professor {
         this.numero = numero;
     }
 
-    // Getters
     public int getId() {
         return id;
     }
@@ -100,7 +92,10 @@ public class Professor {
         return salario;
     }
 
-    // Setters
+    public String getSenha() {
+        return senha;
+    }
+
     public void setId(int id) {
         this.id = id;
     }
@@ -139,5 +134,9 @@ public class Professor {
 
     public void setSalario(double salario) {
         this.salario = salario;
+    }
+
+    public void setSenha(String senha) {
+        this.senha = senha;
     }
 }

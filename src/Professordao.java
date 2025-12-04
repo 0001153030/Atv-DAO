@@ -1,24 +1,39 @@
-package src;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Classe de Acesso a Dados (DAO) para a entidade Professor.
- * Implementa todas as operações CRUD (Create, Read, Update, Delete).
- */
+/** DAO para a entidade Professor, com operações CRUD e autenticação. */
 class ProfessorDAO {
 
-    /**
-     * CREATE: Insere um novo professor no BD.
-     */
-    public void inserir(Professor professor) {
-        // Query SQL usa '?' (placeholders) para segurança (PreparedStatement).
-        String sql =
-            "INSERT INTO professores (nome, rua, bairro, cidade, estado_civil, estado, salario, email, numero) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    /** Autentica um professor pelo email e senha. */
+    public boolean autenticar(String email, String senha) {
+        String sql = "SELECT * FROM professores WHERE email = ? AND senha = ?";
+        try (
+            Connection conn = Conexao.getConnection();
+            PreparedStatement stmt = conn.prepareStatement(sql)
+        ) {
+            stmt.setString(1, email);
+            stmt.setString(2, senha);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                // Se as credenciais forem válidas, define a sessão
+                ProfessorSession.setLoggedIn(true);
+                ProfessorSession.setProfessorId(rs.getInt("id"));
+                return true;
+            }
+        } catch (Exception e) {
+            System.out.println("Erro ao autenticar: " + e.getMessage());
+        }
+        return false;
+    }
 
-        // try-with-resources: Garante o fechamento automático da Conexão e do PreparedStatement.
+    /** Insere um novo professor no BD. */
+    public void inserir(Professor professor) {
+        // Query SQL com placeholders para segurança.
+        String sql =
+            "INSERT INTO professores (nome, rua, bairro, cidade, estado_civil, estado, salario, email, numero, senha) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        // try-with-resources para fechamento automático.
         try (
             Connection conn = Conexao.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)
@@ -35,6 +50,7 @@ class ProfessorDAO {
             stmt.setInt(9, professor.getNumero());
 
             // Executa a instrução SQL de modificação (INSERT).
+            stmt.setString(10, professor.getSenha());
             stmt.executeUpdate();
 
             System.out.println("Professor inserido com sucesso!");
@@ -43,10 +59,7 @@ class ProfessorDAO {
         }
     }
 
-    /**
-     * READ ALL: Lista todos os professores do BD.
-     * @return Lista de objetos Professor.
-     */
+    /** Lista todos os professores do BD. */
     public List<Professor> listar() {
         List<Professor> lista = new ArrayList<>();
         String sql = "SELECT * FROM professores";
@@ -54,12 +67,12 @@ class ProfessorDAO {
         try (
             Connection conn = Conexao.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql);
-            // executeQuery() retorna o ResultSet (conjunto de resultados).
+            // executeQuery retorna o ResultSet.
             ResultSet rs = stmt.executeQuery()
         ) {
             // Itera sobre cada linha retornada pelo banco de dados.
             while (rs.next()) {
-                // Mapeamento reverso: Converte a linha do BD em um objeto Professor.
+                // Converte a linha do BD em um objeto Professor.
                 Professor p = new Professor(
                     rs.getInt("id"), // Pega o valor da coluna 'id'
                     rs.getString("nome"), // Pega o valor da coluna 'nome'
@@ -81,11 +94,9 @@ class ProfessorDAO {
         return lista;
     }
 
-    /**
-     * UPDATE: Atualiza os dados de um professor existente pelo ID.
-     */
+    /** Atualiza os dados de um professor pelo ID. */
     public void atualizar(Professor professor) {
-        // A cláusula WHERE id = ? é essencial para garantir a atualização do registro correto.
+        // Cláusula WHERE id = ? para atualizar o registro correto.
         String sql =
             "UPDATE professores SET nome = ?, rua = ?, bairro = ?, cidade = ?, estado_civil = ?, estado = ?, salario = ?, email = ?, numero = ? WHERE id = ?";
 
@@ -115,9 +126,7 @@ class ProfessorDAO {
         }
     }
 
-    /**
-     * DELETE: Remove um registro do BD com base no ID.
-     */
+    /** Remove um registro do BD pelo ID. */
     public void deletar(int id) {
         String sql = "DELETE FROM professores WHERE id = ?";
 
@@ -125,7 +134,7 @@ class ProfessorDAO {
             Connection conn = Conexao.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
-            // Define o ID do professor a ser deletado.
+            // Define o ID do professor para exclusão.
             stmt.setInt(1, id);
 
             stmt.executeUpdate();

@@ -1,5 +1,3 @@
-package src;
-
 /**
  * Entidade Aluno (Model).
  * Armazena os dados do aluno e segue o princípio do Encapsulamento.

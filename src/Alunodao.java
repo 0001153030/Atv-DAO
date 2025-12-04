@@ -1,32 +1,33 @@
-package src;
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Classe de Acesso a Dados (DAO) para a entidade Aluno.
- * Implementa todas as operações CRUD (Create, Read, Update, Delete).
- */
+/** Classe DAO para a entidade Aluno, implementando operações CRUD. */
 class AlunoDAO {
 
-    /**
-     * CREATE: Insere um novo aluno no BD.
-     */
+    /** Insere um novo aluno no banco de dados. */
     public void inserir(Aluno aluno) {
-        // Query SQL usa '?' (placeholders) para segurança (PreparedStatement).
+        // Verifica se o professor está logado.
+        if (!ProfessorSession.isLoggedIn()) {
+            System.out.println(
+                "Ação não permitida. Faça login para cadastrar alunos."
+            );
+            return;
+        }
+
+        // Query SQL com placeholders para segurança.
         String sql = "INSERT INTO alunos (nome, email) VALUES (?, ?)";
 
-        // try-with-resources: Garante o fechamento automático da Conexão e do PreparedStatement.
+        // try-with-resources para fechamento automático de recursos.
         try (
             Connection conn = Conexao.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
-            // Mapeamento do objeto Aluno para a Query SQL (1=nome, 2=email).
+            // Mapeia o objeto Aluno para a Query SQL.
             stmt.setString(1, aluno.getNome());
             stmt.setString(2, aluno.getEmail());
 
-            // Executa a instrução SQL de modificação (INSERT).
+            // Executa a instrução SQL.
             stmt.executeUpdate();
 
             System.out.println("Aluno inserido com sucesso!");
@@ -35,10 +36,7 @@ class AlunoDAO {
         }
     }
 
-    /**
-     * READ ALL: Lista todos os alunos do BD.
-     * @return Lista de objetos Aluno.
-     */
+    /** Lista todos os alunos do banco de dados. */
     public List<Aluno> listar() {
         List<Aluno> lista = new ArrayList<>();
         String sql = "SELECT * FROM alunos";
@@ -46,12 +44,12 @@ class AlunoDAO {
         try (
             Connection conn = Conexao.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql);
-            // executeQuery() retorna o ResultSet (conjunto de resultados).
+            // Retorna o ResultSet com os dados.
             ResultSet rs = stmt.executeQuery()
         ) {
-            // Itera sobre cada linha retornada pelo banco de dados.
+            // Itera sobre os resultados.
             while (rs.next()) {
-                // Mapeamento reverso: Converte a linha do BD em um objeto Aluno.
+                // Converte a linha do banco em um objeto Aluno.
                 Aluno a = new Aluno(
                     rs.getInt("id"), // Pega o valor da coluna 'id'
                     rs.getString("nome"), // Pega o valor da coluna 'nome'
@@ -66,22 +64,20 @@ class AlunoDAO {
         return lista;
     }
 
-    /**
-     * UPDATE: Atualiza os dados de um aluno existente pelo ID.
-     */
+    /** Atualiza os dados de um aluno existente pelo ID. */
     public void atualizar(Aluno aluno) {
-        // A cláusula WHERE id = ? é essencial para garantir a atualização do registro correto.
+        // WHERE id = ? garante a atualização do registro correto.
         String sql = "UPDATE alunos SET nome = ?, email = ? WHERE id = ?";
 
         try (
             Connection conn = Conexao.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
-            // 1. Novos valores para Nome e Email.
+            // Define os novos valores.
             stmt.setString(1, aluno.getNome());
             stmt.setString(2, aluno.getEmail());
 
-            // 2. ID do registro a ser atualizado (condição WHERE).
+            // Define o ID do registro a ser atualizado.
             stmt.setInt(3, aluno.getId());
 
             stmt.executeUpdate();
@@ -92,17 +88,15 @@ class AlunoDAO {
         }
     }
 
-    /**
-     * DELETE: Remove um registro do BD com base no ID.
-     */
+    /** Remove um registro do banco de dados pelo ID. */
     public void deletar(int id) {
-        String sql = "DELETE FROM alunos WHERE id = ?";
+        String sql = "DELETE FROM alunos WHERE id = ?"; // Query para exclusão.
 
         try (
             Connection conn = Conexao.getConnection();
             PreparedStatement stmt = conn.prepareStatement(sql)
         ) {
-            // Define o ID do aluno a ser deletado.
+            // Define o ID do aluno para exclusão.
             stmt.setInt(1, id);
 
             stmt.executeUpdate();
